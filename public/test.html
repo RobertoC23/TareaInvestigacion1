@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba de WebSockets</title>
+</head>
+<body>
+
+<h2>Prueba del servidor Socket.IO</h2>
+
+<input type="text" id="usuario"
+       placeholder="Nombre de usuario">
+<button onclick="unirse()">Unirse al chat</button>
+
+<hr>
+
+<input type="text" id="mensaje"
+       placeholder="Escribe un mensaje">
+<button onclick="enviar()">Enviar</button>
+
+<h3>Mensajes recibidos:</h3>
+<ul id="mensajes"></ul>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+    const socket = io();
+
+    function mostrar(texto) {
+        const li = document.createElement("li");
+        li.textContent = texto;
+        document.getElementById("mensajes").appendChild(li);
+    }
+
+    socket.on("connect", () => {
+        mostrar("Conectado al servidor");
+    });
+
+    socket.on("disconnect", () => {
+        mostrar("Desconectado del servidor");
+    });
+
+    function unirse() {
+        const nombre = document.getElementById("usuario").value;
+
+        socket.emit("user:join", {
+            user: nombre
+        });
+    }
+
+    function enviar() {
+        const texto = document.getElementById("mensaje").value;
+
+        socket.emit("chat:message", {
+            text: texto
+        });
+
+        document.getElementById("mensaje").value = "";
+    }
+
+    socket.on("chat:message", (data) => {
+        mostrar(data.user + ": " + data.text);
+    });
+
+    socket.on("system:info", (data) => {
+        mostrar("Sistema: " + data.msg);
+    });
+
+    socket.on("user:leave", (data) => {
+        mostrar(data.user + " salió del chat");
+    });
+</script>
+
+</body>
+</html>
