@@ -16,7 +16,7 @@ joinBtn.addEventListener('click', () => {
     const username = usernameInput.value.trim();
     if (username) {
         currentUser = username;
-        socket.emit('user:join', { username });
+        socket.emit('user:join', { user: username });
         userDisplay.textContent = `Usuario: ${username}`;
         joinScreen.style.display = 'none';
         chatScreen.style.display = 'block';
@@ -37,10 +37,11 @@ function sendMessage() {
 }
 
 leaveBtn.addEventListener('click', () => {
-    socket.emit('user:leave');
+    socket.disconnect();
     chatScreen.style.display = 'none';
     joinScreen.style.display = 'block';
     messagesContainer.innerHTML = '';
+    socket.connect();
 });
 
 socket.on('chat:message', (data) => {
@@ -54,7 +55,7 @@ socket.on('chat:message', (data) => {
 socket.on('system:info', (data) => {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message system-msg';
-    msgDiv.textContent = data.text;
+    msgDiv.textContent = data.msg;
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 });
