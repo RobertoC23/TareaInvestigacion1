@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io({ transports: ['websocket'] });
 
 const joinScreen = document.getElementById('join-screen');
 const chatScreen = document.getElementById('chat-screen');
@@ -37,6 +37,7 @@ function sendMessage() {
 }
 
 leaveBtn.addEventListener('click', () => {
+    currentUser = '';
     socket.disconnect();
     chatScreen.style.display = 'none';
     joinScreen.style.display = 'block';
@@ -44,10 +45,19 @@ leaveBtn.addEventListener('click', () => {
     socket.connect();
 });
 
+socket.on('connect', () => {
+    if (currentUser) {
+        socket.emit('user:join', { user: currentUser });
+    }
+});
+
 socket.on('chat:message', (data) => {
     const msgDiv = document.createElement('div');
     msgDiv.className = 'message';
-    msgDiv.innerHTML = `<strong>${data.user}:</strong> ${data.text}`;
+    const author = document.createElement('strong');
+    author.textContent = `${data.user}: `;
+    msgDiv.appendChild(author);
+    msgDiv.appendChild(document.createTextNode(String(data.text)));
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 });
@@ -59,3 +69,54 @@ socket.on('system:info', (data) => {
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 });
+
+// P4-CONNECTION-STATE
+// Indicadores visibles de conexión.
+const statusElements = [joinScreen, chatScreen].map(screen => {
+    const element = document.createElement('div');
+    element.className = 'connection-status';
+    element.setAttribute('role', 'status');
+    element.setAttribute('aria-live', 'polite');
+    screen.prepend(element);
+    return element;
+});
+
+function updateConnectionStatus(state) {
+    const labels = {
+        connected: 'Conectado',
+        reconnecting: 'Reconectando...',
+        disconnected: 'Desconectado'
+    };
+
+    statusElements.forEach(element => {
+        element.textContent = 'Estado: ' + labels[state];
+        element.dataset.state = state;
+    });
+
+    sendBtn.disabled = state !== 'connected';
+    joinBtn.disabled = state !== 'connected';
+}
+
+socket.on('connect', () => {
+    updateConnectionStatus('connected');
+});
+
+socket.on('disconnect', () => {
+    updateConnectionStatus('reconnecting');
+});
+
+socket.io.on('reconnect_attempt', () => {
+    updateConnectionStatus('reconnecting');
+});
+
+socket.on('connect_error', () => {
+    updateConnectionStatus('reconnecting');
+});
+
+socket.io.on('reconnect_failed', () => {
+    updateConnectionStatus('disconnected');
+});
+
+updateConnectionStatus(
+    socket.connected ? 'connected' : 'reconnecting'
+);

@@ -56,3 +56,32 @@ button {
 button:hover {
     background: #005999;
 }
+
+/* P4-CONNECTION-STATUS */
+.connection-status {
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.connection-status[data-state="connected"] {
+    background: #163d28;
+    color: #b9f3ca;
+}
+
+.connection-status[data-state="reconnecting"] {
+    background: #483716;
+    color: #ffe09a;
+}
+
+.connection-status[data-state="disconnected"] {
+    background: #4b2020;
+    color: #ffb5b5;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
